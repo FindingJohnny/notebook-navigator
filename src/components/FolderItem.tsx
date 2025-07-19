@@ -22,6 +22,7 @@ import { useServices } from '../context/ServicesContext';
 import { useSettingsState } from '../context/SettingsContext';
 import { setIcon } from 'obsidian';
 import { isTFile, isTFolder } from '../utils/typeGuards';
+import { isEmoji } from '../utils/iconUtils';
 import { useContextMenu } from '../hooks/useContextMenu';
 import { parseExcludedProperties, shouldExcludeFile } from '../utils/fileFilters';
 import { getFolderNote } from '../utils/fileFinder';
@@ -160,14 +161,25 @@ export const FolderItem = React.memo(function FolderItem({ folder, level, isExpa
         }
     }, [isExpanded]);
 
-    // Add this useEffect for the folder icon
+    // Render folder icon (supports both Lucide icons and emojis)
     useEffect(() => {
         if (iconRef.current && settings.showIcons) {
             if (icon) {
-                // Custom icon is set - always show it, never toggle
-                setIcon(iconRef.current, icon);
+                // Custom icon is set - check if it's an emoji or Lucide icon
+                if (isEmoji(icon)) {
+                    // Render emoji directly
+                    iconRef.current.textContent = icon;
+                    iconRef.current.className = 'nn-folder-icon nn-folder-icon--emoji';
+                } else {
+                    // Render Lucide icon
+                    iconRef.current.textContent = '';
+                    iconRef.current.className = 'nn-folder-icon';
+                    setIcon(iconRef.current, icon);
+                }
             } else {
                 // Default icon - show open folder only if has children AND is expanded
+                iconRef.current.textContent = '';
+                iconRef.current.className = 'nn-folder-icon';
                 const iconName = (hasChildren && isExpanded) ? 'folder-open' : 'folder-closed';
                 setIcon(iconRef.current, iconName);
             }

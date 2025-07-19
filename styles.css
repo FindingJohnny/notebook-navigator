@@ -1247,6 +1247,165 @@ body.nn-resizing {
 }
 
 /* ========================================================================
+   Emoji Support Styles
+   ======================================================================== */
+
+/* Tab navigation for icon picker modal */
+.nn-icon-tabs-container {
+    display: flex;
+    border-bottom: 1px solid var(--background-modifier-border);
+    margin-bottom: var(--size-4-2);
+}
+
+.nn-icon-tab {
+    padding: var(--size-4-2) var(--size-4-4);
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.nn-icon-tab:hover {
+    color: var(--text-normal);
+    background-color: var(--background-modifier-hover);
+}
+
+.nn-icon-tab--active {
+    color: var(--text-accent);
+    border-bottom-color: var(--interactive-accent);
+}
+
+/* Simple emoji picker styles */
+.nn-emoji-picker-simple {
+    padding: var(--size-4-4);
+}
+
+.nn-emoji-input-section {
+    margin-bottom: var(--size-4-4);
+}
+
+.nn-emoji-input-title,
+.nn-emoji-recent-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-normal);
+    margin-bottom: var(--size-4-2);
+}
+
+.nn-emoji-input-container {
+    display: flex;
+    gap: var(--size-4-2);
+    align-items: center;
+}
+
+.nn-emoji-input-field {
+    flex: 1;
+    padding: var(--size-4-3);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 24px;
+    text-align: center;
+    min-height: 50px;
+}
+
+.nn-emoji-input-field:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+.nn-emoji-submit-button {
+    padding: var(--size-4-3) var(--size-4-4);
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: var(--radius-s);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.nn-emoji-submit-button:hover:not(:disabled) {
+    background-color: var(--interactive-accent-hover);
+}
+
+.nn-emoji-submit-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.nn-emoji-error {
+    color: var(--text-error);
+    font-size: 12px;
+    margin-top: var(--size-4-1);
+}
+
+.nn-emoji-divider {
+    height: 1px;
+    background-color: var(--background-modifier-border);
+    margin: var(--size-4-4) 0;
+}
+
+.nn-emoji-recent-section {
+    margin-top: var(--size-4-4);
+}
+
+.nn-emoji-recent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: var(--size-4-2);
+}
+
+.nn-emoji-recent-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    background-color: var(--background-secondary);
+    cursor: pointer;
+    font-size: 24px;
+    transition: all 0.2s ease;
+}
+
+.nn-emoji-recent-item:hover {
+    background-color: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+    transform: scale(1.05);
+}
+
+/* Emoji folder icon styles */
+.nn-folder-icon--emoji {
+    font-size: 16px !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Mobile emoji adjustments */
+.notebook-navigator-mobile .nn-folder-icon--emoji {
+    font-size: 20px !important;
+}
+
+.notebook-navigator-mobile .nn-emoji-grid {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.notebook-navigator-mobile .nn-emoji-item {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+}
+
+/* ========================================================================
    Scrollbar Styles
    ======================================================================== */
 

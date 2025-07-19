@@ -20,21 +20,25 @@ import { App, Modal, setIcon, getIconIds } from 'obsidian';
 import { MetadataService } from '../services/MetadataService';
 import { strings } from '../i18n';
 import { ItemType } from '../types';
+import { isEmoji } from '../utils/iconUtils';
+import React from 'react';
+import { createRoot, Root } from 'react-dom/client';
+import { EmojiPicker } from '../components/EmojiPicker';
 
 /**
- * Icon picker modal for selecting custom folder icons
- * Displays all available Lucide icons in a searchable grid layout
+ * Icon picker modal for selecting custom folder icons and emojis
+ * Features tabbed interface with separate Lucide icons and emoji pickers
  * 
  * Features:
- * - Shows recently used icons when no search term is entered
- * - Live search through all available Lucide icons
- * - Grid layout with 5 columns showing icon preview above name
- * - Maintains a fixed size (5x4 grid visible area)
- * - Persists recently used icons across sessions
- * - Limits search results to 50 icons for performance
+ * - Tabbed interface: Icons tab (Lucide) and Emoji tab
+ * - Icons tab: Shows recently used icons when no search term is entered, live search, grid layout
+ * - Emoji tab: Simple text input for any valid emoji character plus recently used emojis
+ * - Keyboard navigation support for both tabs
+ * - Persists recently used items across sessions
+ * - Icons tab limits search results to 50 items for performance
  * 
- * The modal uses Obsidian's getIconIds() API to dynamically retrieve
- * all available icons, ensuring compatibility with future updates.
+ * The modal supports both Lucide icons via Obsidian's getIconIds() API
+ * and any Unicode emoji characters for enhanced folder customization.
  */
 export class IconPickerModal extends Modal {
     private metadataService: MetadataService;
@@ -44,11 +48,15 @@ export class IconPickerModal extends Modal {
     private resultsContainer: HTMLDivElement;
     private allIcons: string[];
     private recentlyUsedIcons: string[];
+    private recentlyUsedEmojis: string[];
     private focusedIndex: number = -1;
     private gridColumns: number = 5;
     private searchInputKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
     private contentElKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
     private searchDebounceTimer: NodeJS.Timeout | null = null;
+    private activeTab: 'icons' | 'emojis' = 'icons';
+    private tabsContainer: HTMLDivElement;
+    private reactRoot: Root | null = null;
 
     /** Callback function invoked when an icon is selected */
     public onChooseIcon: (iconId: string | null) => void;
@@ -58,7 +66,7 @@ export class IconPickerModal extends Modal {
      * @param app - The Obsidian app instance
      * @param metadataService - The metadata service for managing folder/tag icons
      * @param itemPath - Path of the folder or tag to set icon for
-     * @param recentlyUsedIcons - List of recently used icon IDs
+     * @param recentlyUsedIcons - List of recently used icon IDs and emojis
      * @param itemType - Whether this is for a folder or tag
      */
     constructor(app: App, metadataService: MetadataService, itemPath: string, recentlyUsedIcons: string[] = [], itemType: typeof ItemType.FOLDER | typeof ItemType.TAG = ItemType.FOLDER) {
@@ -70,22 +78,27 @@ export class IconPickerModal extends Modal {
         // Get all available icons
         this.allIcons = getIconIds();
         
-        // Get recently used icons and filter out any that no longer exist
+        // Separate recently used items into icons and emojis
         this.recentlyUsedIcons = recentlyUsedIcons
-            .filter(icon => this.allIcons.includes(icon));
+            .filter(item => !isEmoji(item) && this.allIcons.includes(item));
+        this.recentlyUsedEmojis = recentlyUsedIcons
+            .filter(item => isEmoji(item));
     }
 
     /**
      * Called when the modal is opened
-     * Sets up the search input and results container
-     * Shows recently used icons by default
+     * Sets up tabs, search input and results container
+     * Starts on Icons tab by default
      */
     onOpen() {
         const { contentEl } = this;
         contentEl.empty();
         contentEl.addClass('nn-icon-picker-modal');
 
-        // Create search input
+        // Create tabs
+        this.createTabs();
+
+        // Create search input (hidden when emoji tab is active)
         const searchContainer = contentEl.createDiv('nn-icon-search-container');
         this.searchInput = searchContainer.createEl('input', {
             type: 'text',
@@ -109,10 +122,10 @@ export class IconPickerModal extends Modal {
         // Set up keyboard navigation
         this.setupKeyboardNavigation();
 
-        // Focus search input
+        // Focus search input initially
         this.searchInput.focus();
 
-        // Show initial results (recently used only)
+        // Show initial results
         this.updateResults();
     }
 
@@ -127,6 +140,12 @@ export class IconPickerModal extends Modal {
             this.searchDebounceTimer = null;
         }
         
+        // Cleanup React root
+        if (this.reactRoot) {
+            this.reactRoot.unmount();
+            this.reactRoot = null;
+        }
+        
         // Remove event listeners to prevent memory leak
         if (this.searchInputKeydownHandler && this.searchInput) {
             this.searchInput.removeEventListener('keydown', this.searchInputKeydownHandler);
@@ -139,6 +158,66 @@ export class IconPickerModal extends Modal {
         
         const { contentEl } = this;
         contentEl.empty();
+    }
+
+    /**
+     * Creates the tab interface
+     */
+    private createTabs() {
+        this.tabsContainer = this.contentEl.createDiv('nn-icon-tabs-container');
+        
+        const iconsTab = this.tabsContainer.createDiv('nn-icon-tab');
+        iconsTab.setText('Icons');
+        if (this.activeTab === 'icons') {
+            iconsTab.addClass('nn-icon-tab--active');
+        }
+        iconsTab.addEventListener('click', () => this.switchTab('icons'));
+        
+        const emojisTab = this.tabsContainer.createDiv('nn-icon-tab');
+        emojisTab.setText('Emojis');
+        if (this.activeTab === 'emojis') {
+            emojisTab.addClass('nn-icon-tab--active');
+        }
+        emojisTab.addEventListener('click', () => this.switchTab('emojis'));
+    }
+
+    /**
+     * Switches between icon and emoji tabs
+     */
+    private switchTab(tab: 'icons' | 'emojis') {
+        this.activeTab = tab;
+        
+        // Update tab appearance
+        const tabs = this.tabsContainer.querySelectorAll('.nn-icon-tab');
+        tabs.forEach((tabEl, index) => {
+            const element = tabEl as HTMLElement;
+            if ((index === 0 && tab === 'icons') || (index === 1 && tab === 'emojis')) {
+                element.classList.add('nn-icon-tab--active');
+            } else {
+                element.classList.remove('nn-icon-tab--active');
+            }
+        });
+        
+        // Update visibility of search input
+        const searchContainer = this.contentEl.querySelector('.nn-icon-search-container') as HTMLElement;
+        if (searchContainer) {
+            searchContainer.style.display = tab === 'icons' ? 'block' : 'none';
+        }
+        
+        // Reset search
+        if (this.searchInput) {
+            this.searchInput.value = '';
+        }
+        
+        // Update results only if container exists
+        if (this.resultsContainer) {
+            this.updateResults();
+        }
+        
+        // Focus appropriate element
+        if (tab === 'icons' && this.searchInput) {
+            this.searchInput.focus();
+        }
     }
 
     /**
@@ -272,15 +351,38 @@ export class IconPickerModal extends Modal {
     }
 
     /**
-     * Updates the displayed icons based on search input
-     * Shows recently used icons when search is empty
-     * Filters and displays matching icons when searching
-     * Limits results to 50 icons for performance
+     * Updates the displayed content based on active tab
+     * Icons tab: Shows recently used icons when search is empty, filters and displays matching icons when searching (limited to 50 items)
+     * Emoji tab: Renders React emoji picker component with text input and recently used emojis
      */
     private updateResults() {
+        if (!this.resultsContainer) {
+            return;
+        }
+        
         this.resultsContainer.empty();
         this.focusedIndex = -1;
         
+        // Cleanup existing React root
+        if (this.reactRoot) {
+            this.reactRoot.unmount();
+            this.reactRoot = null;
+        }
+        
+        if (this.activeTab === 'emojis') {
+            // Render emoji picker using React
+            const emojiContainer = this.resultsContainer.createDiv('nn-emoji-picker-container');
+            this.reactRoot = createRoot(emojiContainer);
+            this.reactRoot.render(
+                React.createElement(EmojiPicker, {
+                    onSelectEmoji: (emoji: string) => this.selectIcon(emoji),
+                    recentlyUsedEmojis: this.recentlyUsedEmojis
+                })
+            );
+            return;
+        }
+        
+        // Icons tab logic (existing code)
         const searchTerm = this.searchInput.value.toLowerCase().trim();
         
         if (searchTerm === '') {
