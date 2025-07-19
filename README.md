@@ -51,7 +51,7 @@ To a modern, Notes-style interface like this:
 - **Drag & drop** - Move notes between folders, drag to tags to add tags, drag to Untagged to remove all tags
 - **Resizable panes** - Adjust the layout to your needs
 - **Smart filtering** - Exclude folders and notes with patterns
-- **Visual customization** - Folder and tag colors and icons
+- **Visual customization** - Folder and tag colors, Lucide icons, and emoji icons
 
 ## How to Use
 
@@ -71,8 +71,8 @@ To a modern, Notes-style interface like this:
    - Delete items
    - Move files to another folder
    - Pin/unpin notes
-   - Change folder colors
-   - Remove folder colors
+   - Change folder colors and icons
+   - Remove folder colors and icons
 5. Drag and drop notes between folders to organize, drag to tags to add tags, or drag to Untagged to remove all tags
 
 **Tip:** You can use the ribbon icon (folder tree icon) in the left sidebar to activate Notebook Navigator in case you close it by mistake.
@@ -268,8 +268,16 @@ Add visual organization with custom colors and icons:
 
 1. Right-click any folder or tag
 2. Select "Change color" or "Change icon"
-3. Choose from a palette of colors or variety of Lucide icons
+3. Choose from:
+   - **Colors**: A palette of colors for folder/tag highlighting
+   - **Icons**: Lucide icon library with search functionality
+   - **Emojis**: Any emoji character for unique visual identification
 4. To remove, right-click and select "Remove color" or "Remove icon"
+
+**Emoji Tips:**
+- Type or paste any emoji (🎨, 📚, ⭐, 🔥, etc.) for instant visual organization
+- Recently used emojis are saved for quick access
+- Perfect for project categories, priority levels, or personal organization systems
 
 ### Custom sort order
 
